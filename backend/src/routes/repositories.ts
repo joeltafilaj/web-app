@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import passport from 'passport';
 import { PrismaClient, User } from '@prisma/client';
-import { commitsQueue } from '../workers';
+import { QUEUE } from '../workers/commits';
 import { GitHubService } from '../services/github';
 
 const router = Router();
@@ -48,7 +48,7 @@ router.get(
         });
 
         // Queue background job to fetch commits
-        await commitsQueue.add(
+        await QUEUE.add(
           'fetch-commits',
           {
             repositoryId: repository.id,

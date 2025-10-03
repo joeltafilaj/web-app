@@ -1,22 +1,15 @@
 import { Worker } from 'bullmq';
 import { PrismaClient } from '@prisma/client';
 import { GitHubService } from '../services/github';
-import { Redis } from 'ioredis';
+import redis from '../config/redis';
 import { Queue } from 'bullmq';
 import dotenv from 'dotenv';
-
-// Shared Redis connection configuration
-export const redisConnection = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  maxRetriesPerRequest: null,
-});
 
 export const QUEUE_NAME = 'commits-fetch';
 
 // Shared queue instance
-export const commitsQueue = new Queue(QUEUE_NAME, {
-  connection: redisConnection,
+export const QUEUE = new Queue(QUEUE_NAME, {
+  connection: redis,
 });
 
 dotenv.config();
@@ -24,7 +17,7 @@ dotenv.config();
 const prisma = new PrismaClient();
 
 // Background worker to fetch commits
-const worker = new Worker(
+const WORKER = new Worker(
   QUEUE_NAME,
   async (job) => {
     const { repositoryId, userId, repoFullName } = job.data;
@@ -92,16 +85,16 @@ const worker = new Worker(
       throw error;
     }
   },
-  { connection: redisConnection }
+  { connection: redis }
 );
 
-worker.on('completed', (job) => {
+WORKER.on('completed', (job) => {
   console.log(`✅ Job ${job.id} completed`);
 });
 
-worker.on('failed', (job, err) => {
+WORKER.on('failed', (job, err) => {
   console.error(`❌ Job ${job?.id} failed:`, err.message);
 });
 
-export default worker;
+export default WORKER;
 

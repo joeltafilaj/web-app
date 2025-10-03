@@ -6,7 +6,7 @@ import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
 import repositoryRoutes from './routes/repositories';
 import './config/passport';
-import './workers';
+import './workers/commits';
 
 dotenv.config();
 
