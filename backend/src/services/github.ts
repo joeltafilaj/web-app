@@ -52,6 +52,23 @@ export class GitHubService {
   }
 
   /**
+   * Fetch languages used in a repository
+   */
+  static async getRepositoryLanguages(accessToken: string, repoFullName: string) {
+    const response = await axios.get(
+      `https://api.github.com/repos/${repoFullName}/languages`,
+      {
+        headers: {
+          Authorization: `token ${accessToken}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+      }
+    );
+
+    return response.data;
+  }
+
+  /**
    * Revoke access token from GitHub
    */
   static async revoke(accessToken: string): Promise<void> {

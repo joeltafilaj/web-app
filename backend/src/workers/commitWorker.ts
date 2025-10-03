@@ -58,6 +58,17 @@ const worker = new Worker(
         });
       }
 
+      // Fetch and store language data
+      try {
+        const languages = await GitHubService.getRepositoryLanguages(user.accessToken, repoFullName);
+        await prisma.repository.update({
+          where: { id: repositoryId },
+          data: { languages },
+        });
+      } catch (error) {
+        console.error(`Failed to fetch languages for ${repoFullName}:`, error);
+      }
+
       return { success: true, count: commits.length };
     } catch (error: any) {
       if (error.response?.status === 409) {

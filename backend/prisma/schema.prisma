@@ -31,6 +31,7 @@ model Repository {
   url             String
   starred         Boolean          @default(false)
   starredAt       DateTime?
+  languages       Json?
   userId          String
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   commits         Commit[]

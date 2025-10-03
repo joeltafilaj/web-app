@@ -20,6 +20,7 @@ export interface Repository {
   description: string
   url: string
   commits: Commit[]
+  languages?: Record<string, number> | null
 }
 
 export const useRepositoryStore = defineStore('repository', () => {

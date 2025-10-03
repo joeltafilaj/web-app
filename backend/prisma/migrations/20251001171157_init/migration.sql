@@ -23,6 +23,7 @@ CREATE TABLE "repositories" (
     "url" TEXT NOT NULL,
     "starred" BOOLEAN NOT NULL DEFAULT FALSE,
     "starredAt" TIMESTAMP(3),
+    "languages" JSONB,
     "userId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
