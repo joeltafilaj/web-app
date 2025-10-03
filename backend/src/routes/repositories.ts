@@ -1,22 +1,16 @@
 import { Router } from 'express';
 import passport from 'passport';
 import { PrismaClient } from '@prisma/client';
-import { Queue } from 'bullmq';
-import { Redis } from 'ioredis';
-import axios from 'axios';
+import github from '../services/github';
+import queue from '../services/queue';
 
 const router = Router();
 const prisma = new PrismaClient();
 
-// Redis connection for job queue
-const connection = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  maxRetriesPerRequest: null,
-});
-
-// Create job queue
-const commitsQueue = new Queue('commits-fetch', { connection });
+interface User {
+  id: string;
+  accessToken: string;
+}
 
 // Get starred repositories
 router.get(
@@ -24,20 +18,12 @@ router.get(
   passport.authenticate('jwt', { session: false }),
   async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = req.user as User;
 
       // Fetch starred repos from GitHub
-      const response = await axios.get('https://api.github.com/user/starred', {
-        headers: {
-          Authorization: `token ${user.accessToken}`,
-          Accept: 'application/vnd.github.v3+json',
-        },
-        params: { per_page: 100 },
+      const starredRepos = await github.getStarredRepositories({
+        accessToken: user.accessToken,
       });
-
-      const starredRepos = response.data;
-      const repositories = [];
-      let jobCount = 0;
 
       // Save to database and queue jobs
       for (const repo of starredRepos) {
@@ -66,33 +52,27 @@ router.get(
           },
         });
 
-        repositories.push(repository);
-
         // Queue background job to fetch commits
-        await commitsQueue.add(
-          'fetch-commits',
-          {
-            repositoryId: repository.id,
-            userId: user.id,
-            repoFullName: repo.full_name,
-          },
-          {
-            attempts: 3,
-            backoff: { type: 'exponential', delay: 2000 },
-          }
-        );
-        
-        jobCount++;
+        await queue.getCommits({
+          repositoryId: repository.id, 
+          userId: user.id, 
+          repoFullName: repo.full_name,
+        });
       }
 
-      // Send repositories with job count
-      res.json({
-        repositories,
-        jobCount
+      // Fetch repositories with commits from database
+      const repositories = await prisma.repository.findMany({
+        where: { userId: user.id, starred: true },
+        include: {
+          commits: {
+            orderBy: { date: 'desc' },
+          },
+        },
       });
-    } catch (error: any) {
-      console.error('Error fetching starred repos:', error.message);
-      res.status(500).json({ error: 'Failed to fetch starred repositories' });
+
+      res.json(repositories);
+    } catch (error) {
+      res.status(500).json({ error: `Failed to fetch starred repositories: ${(error as Error)?.message}` });
     }
   }
 );

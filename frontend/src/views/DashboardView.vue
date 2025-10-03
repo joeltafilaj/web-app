@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { Repository, useRepositoryStore } from '@/stores/repository'
 import { useRouter } from 'vue-router'
-import { useSSE } from '@/composables/useSSE'
 
 // Components
 import ErrorBanner from '@/components/ErrorBanner.vue'
@@ -14,58 +13,29 @@ import ChartSection from '@/components/ChartSection.vue'
 const authStore = useAuthStore()
 const repositoryStore = useRepositoryStore()
 const router = useRouter()
-const {
-  error: sseError,
-  clearError: clearSSEError,
-  connect: connectSSE,
-  disconnect: disconnectSSE,
-  onMessage: onSSEMessage,
-  setPendingJobs: setPendingJobsSSE,
-  decrementPendingJobs: decrementPendingJobsSSE,
-} = useSSE()
 
-const errorMessage = ref<string | null>(null)
 const selectedRepository = ref<Repository | null>(null)
-const isLoadingData = ref(false)
+const isLoading = ref(false)
 
 const handleLogout = () => {
   repositoryStore.clearRepositories()
-  disconnectSSE() // Disconnect SSE on logout
   authStore.logout()
   router.push('/')
 }
 
 const loadInitialData = async () => {
-  isLoadingData.value = true
-  errorMessage.value = null
+  isLoading.value = true
   try {
-    connectSSE()
-    const jobCount = await repositoryStore.fetchStarredRepositories()
-    
-    // Set job count in SSE store for connection management
-    setPendingJobsSSE(jobCount)
-    
-    setupSSEHandlers()
+    await repositoryStore.fetchStarredRepositories()
   } catch (error) {
-    errorMessage.value = (error as Error)?.message || 'Failed to load data'
+    console.error('Error loading repositories:', error)
   } finally {
-    isLoadingData.value = false
+    isLoading.value = false
   }
 }
 
-const refreshData = async () => {
+const refreshRepositories = async () => {
   await loadInitialData()
-}
-
-const setupSSEHandlers = () => {
-  onSSEMessage((data) => {
-    if (data.type === 'commit-completed' && data.repository) {
-      repositoryStore.updateRepository(data.repository)
-      decrementPendingJobsSSE()
-    } else if (data.type === 'commit-failed') {
-      decrementPendingJobsSSE()
-    }
-  })
 }
 
 onMounted(() => {
@@ -75,10 +45,6 @@ onMounted(() => {
   }
   
   loadInitialData()
-})
-
-onUnmounted(() => {
-  disconnectSSE()
 })
 </script>
 
@@ -119,13 +85,6 @@ onUnmounted(() => {
           :message="repositoryStore.error"
           @dismiss="repositoryStore.clearError()"
         />
-
-        <ErrorBanner 
-          v-if="sseError" 
-          type="warning"
-          :message="sseError"
-          @dismiss="clearSSEError()"
-        />
         
         <!-- User Profile -->
         <UserProfile />
@@ -134,8 +93,8 @@ onUnmounted(() => {
         <RepositoriesSection
           :repositories="repositoryStore.repositories"
           v-model:selected="selectedRepository"
-          :loading="isLoadingData"
-          @refresh="refreshData"
+          :loading="isLoading"
+          @refresh="refreshRepositories"
         />
 
         <!-- Charts Section -->

@@ -1,9 +1,10 @@
 import { Worker } from 'bullmq';
 import { Redis } from 'ioredis';
 import { PrismaClient } from '@prisma/client';
-import axios from 'axios';
 import dotenv from 'dotenv';
-import { appEvents, AppEvent } from '../services/eventEmitter';
+import githubService from '../services/github';
+
+export const WORKER_NAME = 'commit-worker';
 
 dotenv.config();
 
@@ -17,7 +18,7 @@ const connection = new Redis({
 
 // Background worker to fetch commits
 const worker = new Worker(
-  'commits-fetch',
+  WORKER_NAME,
   async (job) => {
     const { repositoryId, userId, repoFullName } = job.data;
 
@@ -38,23 +39,12 @@ const worker = new Worker(
       });
 
       // Fetch commits from GitHub
-      const params: any = { per_page: 100 };
-      if (latestCommit) {
-        params.since = latestCommit.date.toISOString();
-      }
-
-      const response = await axios.get(
-        `https://api.github.com/repos/${repoFullName}/commits`,
-        {
-          headers: {
-            Authorization: `token ${user.accessToken}`,
-            Accept: 'application/vnd.github.v3+json',
-          },
-          params,
-        }
-      );
-
-      const commits = response.data;
+      const since = latestCommit ? latestCommit.date.toISOString() : undefined;
+      const commits = await githubService.getRepositoryCommits({
+        accessToken: user.accessToken,
+        repoFullName,
+        since,
+      });
 
       // Store commits in database
       for (const commit of commits) {
@@ -76,59 +66,11 @@ const worker = new Worker(
         });
       }
 
-      // Fetch the complete repository with commits
-      const repository = await prisma.repository.findUnique({
-        where: { id: repositoryId },
-        include: {
-          commits: {
-            orderBy: { date: 'asc' },
-          },
-        },
-      });
-      
-      // Emit event for SSE with full repository data
-      appEvents.emit(AppEvent.COMMIT_JOB_COMPLETED, {
-        repositoryId,
-        userId,
-        repoFullName,
-        count: commits.length,
-        repository, // Include full repo with commits
-      });
-      
       return { success: true, count: commits.length };
     } catch (error: any) {
-      // Handle empty repository (409 error)
       if (error.response?.status === 409) {
-        console.log(`Repository ${repoFullName} is empty`);
-        
-        // Fetch the repository (with empty commits array)
-        const repository = await prisma.repository.findUnique({
-          where: { id: repositoryId },
-          include: {
-            commits: {
-              orderBy: { date: 'asc' },
-            },
-          },
-        });
-        
-        appEvents.emit(AppEvent.COMMIT_JOB_COMPLETED, {
-          repositoryId,
-          userId,
-          repoFullName,
-          count: 0,
-          repository,
-        });
         return { success: true, count: 0 };
       }
-      
-      // Emit failure event
-      appEvents.emit(AppEvent.COMMIT_JOB_FAILED, {
-        repositoryId,
-        userId,
-        repoFullName,
-        error: error.message,
-      });
-      
       throw error;
     }
   },

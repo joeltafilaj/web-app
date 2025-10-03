@@ -5,7 +5,6 @@ import passport from 'passport';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
 import repositoryRoutes from './routes/repositories';
-import eventsRoutes from './routes/events';
 import './config/passport';
 import './workers/commitWorker'; // Start the background worker
 
@@ -30,7 +29,6 @@ app.use(passport.initialize());
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/repositories', repositoryRoutes);
-app.use('/api/events', eventsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

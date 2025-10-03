@@ -32,18 +32,7 @@ export const useRepositoryStore = defineStore('repository', () => {
       loading.value = true
       error.value = null
       const response = await api.get('/repositories/starred')
-      
-      // Handle both old and new response formats
-      if (response.data.repositories && typeof response.data.jobCount === 'number') {
-        // New format with job count
-        repositories.value = response.data.repositories
-        return response.data.jobCount // Return job count for SSE
-      } else {
-        // Fallback to old format (array of repositories)
-        repositories.value = response.data
-        return response.data.length // Return estimated job count
-      }
-      
+      repositories.value = response.data
     } catch (err) {
       error.value = (err as Error)?.message || 'Failed to fetch starred repositories'
       throw err
