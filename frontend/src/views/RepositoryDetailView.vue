@@ -69,13 +69,6 @@ const formatDate = (date: Date) => {
   })
 }
 
-const formatCommitMessage = (message: string) => {
-  if (message.length > 80) {
-    return message.substring(0, 80) + '...'
-  }
-  return message
-}
-
 const goBack = () => {
   router.push('/dashboard')
 }
@@ -207,8 +200,8 @@ onMounted(() => {
                 </svg>
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-900 mb-1">
-                  {{ formatCommitMessage(commit.message) }}
+                <p :title="commit.message" class="text-sm font-medium text-gray-900 mb-1 w-full truncate">
+                  {{ commit.message }}
                 </p>
                 <div class="flex items-center gap-4 text-xs text-gray-500">
                   <span>{{ commit.author }}</span>
