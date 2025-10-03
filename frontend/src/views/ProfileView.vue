@@ -23,8 +23,8 @@ const handleLogout = async () => {
   router.push('/')
 }
 
-const goToDashboard = () => {
-  router.push('/dashboard')
+const goBack = () => {
+  router.back()
 }
 
 const fetchUserStats = async () => {
@@ -69,7 +69,7 @@ onMounted(() => {
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <button @click="goToDashboard" class="text-gray-600 hover:text-gray-900">
+            <button @click="goBack" class="text-gray-600 hover:text-gray-900">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>

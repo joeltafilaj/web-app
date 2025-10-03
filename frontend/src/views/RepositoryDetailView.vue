@@ -72,7 +72,7 @@ const formatDate = (date: Date) => {
 }
 
 const goBack = () => {
-  router.push('/dashboard')
+  router.back()
 }
 
 const handleLogout = async () => {
