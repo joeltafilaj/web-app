@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeMount } from 'vue'
 import type { Repository } from '@/stores/repository'
 
 interface Props {
@@ -7,6 +7,15 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+const languageColors: Record<string, string> = {}
+
+
+onBeforeMount(() => {
+  for (const lang in props.repository.languages) {
+    languageColors[lang] = generateColorFromString()
+  }
+})
 
 const languageData = computed(() => {
   if (!props.repository.languages) return []
@@ -23,27 +32,12 @@ const languageData = computed(() => {
     .sort((a, b) => b.bytes - a.bytes)
 })
 
-const languageColors: Record<string, string> = {
-  'TypeScript': '#3178c6',
-  'JavaScript': '#f1e05a',
-  'Python': '#3572A5',
-  'Java': '#b07219',
-  'Go': '#00ADD8',
-  'Rust': '#dea584',
-  'CSS': '#563d7c',
-  'HTML': '#e34c26',
-  'Vue': '#41b883',
-  'React': '#61dafb',
-  'PHP': '#4F5D95',
-  'Ruby': '#701516',
-  'C++': '#f34b7d',
-  'C': '#555555',
-  'Shell': '#89e051',
+
+const generateColorFromString = (): string => {
+  const h = Math.floor(Math.random() * 360);
+  return `hsl(${h}, 70%, 60%)`;
 }
 
-const getLanguageColor = (lang: string) => {
-  return languageColors[lang] || '#6b7280'
-}
 </script>
 
 <template>
@@ -55,7 +49,7 @@ const getLanguageColor = (lang: string) => {
         <div class="flex items-center gap-3 flex-1">
           <div 
             class="w-3 h-3 rounded-full flex-shrink-0"
-            :style="{ backgroundColor: getLanguageColor(lang.name) }"
+            :style="{ backgroundColor: languageColors[lang.name] }"
           ></div>
           <span class="font-medium text-gray-900">{{ lang.name }}</span>
         </div>
@@ -65,7 +59,7 @@ const getLanguageColor = (lang: string) => {
               class="h-2 rounded-full transition-all duration-300"
               :style="{ 
                 width: `${lang.percentage}%`,
-                backgroundColor: getLanguageColor(lang.name)
+                backgroundColor: languageColors[lang.name]
               }"
             ></div>
           </div>
@@ -81,7 +75,7 @@ const getLanguageColor = (lang: string) => {
           :key="lang.name"
           :style="{ 
             width: `${lang.percentage}%`,
-            backgroundColor: getLanguageColor(lang.name)
+            backgroundColor: languageColors[lang.name]
           }"
           class="transition-all duration-300"
           :title="`${lang.name}: ${lang.percentage}%`"
