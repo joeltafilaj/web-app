@@ -15,8 +15,10 @@ passport.use(
       callbackURL: process.env.GITHUB_CALLBACK_URL!,
       scope: ['user:email', 'read:user', 'repo'],
     },
-    async (accessToken: string, refreshToken: string, profile: passport.Profile, done: passport.DoneCallback) => {
+    async (accessToken: string, refreshToken: string, profile: any, done: passport.DoneCallback) => {
       try {
+        const githubData = profile._json;
+
         // Create or update user
         const user = await prisma.user.upsert({
           where: { githubId: profile.id },
@@ -25,6 +27,11 @@ passport.use(
             name: profile.displayName,
             avatarUrl: profile.photos?.[0]?.value,
             email: profile.emails?.[0]?.value,
+            bio: githubData.bio,
+            location: githubData.location,
+            followers: githubData.followers,
+            following: githubData.following,
+            publicRepos: githubData.public_repos,
             accessToken,
           },
           create: {
@@ -33,6 +40,11 @@ passport.use(
             name: profile.displayName,
             avatarUrl: profile.photos?.[0]?.value,
             email: profile.emails?.[0]?.value,
+            bio: githubData.bio,
+            location: githubData.location,
+            followers: githubData.followers,
+            following: githubData.following,
+            publicRepos: githubData.public_repos,
             accessToken,
           },
         });

@@ -53,6 +53,11 @@ router.get(
         name: user.name,
         avatarUrl: user.avatarUrl,
         email: user.email,
+        bio: user.bio,
+        location: user.location,
+        followers: user.followers,
+        following: user.following,
+        publicRepos: user.publicRepos,
       },
     });
   }

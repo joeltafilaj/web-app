@@ -9,6 +9,11 @@ export interface User {
   name: string
   avatarUrl: string
   email: string
+  bio?: string
+  location?: string
+  followers?: number
+  following?: number
+  publicRepos?: number
 }
 
 export const useAuthStore = defineStore('auth', () => {
