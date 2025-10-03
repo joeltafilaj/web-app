@@ -65,7 +65,9 @@ const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-US', { 
     year: 'numeric', 
     month: 'short', 
-    day: 'numeric' 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
   })
 }
 
@@ -98,7 +100,7 @@ onMounted(() => {
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
             <button @click="goBack" class="text-gray-600 hover:text-gray-900 transition-colors">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
@@ -106,7 +108,7 @@ onMounted(() => {
           </div>
           <div class="flex items-center gap-3">
             <router-link to="/profile" class="flex btn btn-secondary">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="size-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
               Profile
@@ -133,19 +135,19 @@ onMounted(() => {
               </p>
               <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
                 <span class="flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <svg class="size-4" fill="currentColor" viewBox="0 0 24 24">
                     <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
                   </svg>
                   {{ commitStats.totalCommits }} commits
                 </span>
                 <span class="flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                   </svg>
                   {{ commitStats.uniqueAuthors }} contributors
                 </span>
                 <span v-if="commitStats.dateRange.start" class="flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   {{ formatDate(commitStats.dateRange.start) }} - {{ formatDate(commitStats.dateRange.end) }}
@@ -154,13 +156,13 @@ onMounted(() => {
 
               <div class="flex items-center gap-6 text-sm text-gray-500">
                 <span class="flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
                   {{ commitStats.averageCommitsPerDay }} commits/day avg
                 </span>
                 <span v-if="commitStats.mostActiveAuthor" class="flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Most active: {{ commitStats.mostActiveAuthor }}
@@ -170,9 +172,9 @@ onMounted(() => {
             <a 
               :href="repository.url" 
               target="_blank"
-              class="btn btn-primary flex items-center gap-2"
+              class="btn btn-primary no-underline flex items-center gap-2"
             >
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <svg class="size-5" fill="currentColor" viewBox="0 0 24 24">
                 <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
               </svg>
               View on GitHub
@@ -193,9 +195,9 @@ onMounted(() => {
         <div v-if="recentCommits.length > 0" class="card">
           <h3 class="text-xl font-bold text-gray-900 mb-6">Recent Commits</h3>
           <div class="space-y-4">
-            <div v-for="commit in recentCommits.slice(0, 5)" :key="commit.id" class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div v-for="commit in recentCommits.slice(0, 5)" :key="commit.id" class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+              <div class="size-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg class="size-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
@@ -203,10 +205,17 @@ onMounted(() => {
                 <p :title="commit.message" class="text-sm font-medium text-gray-900 mb-1 w-full truncate">
                   {{ commit.message }}
                 </p>
-                <div class="flex items-center gap-4 text-xs text-gray-500">
+                <div class="flex items-center gap-4 text-sm text-gray-500">
                   <span>{{ commit.author }}</span>
                   <span>{{ formatDate(new Date(commit.date)) }}</span>
-                  <span class="font-mono text-gray-400">{{ commit.sha.substring(0, 7) }}</span>
+                  <a 
+                    :href="`https://github.com/${repository.fullName}/commit/${commit.sha}`"
+                    target="_blank"
+                    class="font-mono text-gray-400 hover:text-primary-700"
+                    @click.stop
+                  >
+                    {{ commit.sha.substring(0, 7) }}
+                  </a>
                 </div>
               </div>
             </div>

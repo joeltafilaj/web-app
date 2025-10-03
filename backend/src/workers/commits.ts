@@ -89,11 +89,11 @@ const WORKER = new Worker(
 );
 
 WORKER.on('completed', (job) => {
-  console.log(`✅ Job ${job.id} completed`);
+  console.log(`✅ Commits fetched for ${job.data.repoFullName}`);
 });
 
 WORKER.on('failed', (job, err) => {
-  console.error(`❌ Job ${job?.id} failed:`, err.message);
+  console.error(`❌ Commits fetch failed for ${job?.data.repoFullName}:`, err.message);
 });
 
 export default WORKER;
