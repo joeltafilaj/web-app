@@ -32,7 +32,6 @@ export class GitHubService {
    */
   async getRepositoryCommits(job: GetRepositoryCommitsJob) {
     const { accessToken, repoFullName, since } = job;
-    
     const params: any = { per_page: 100 };
     if (since) {
       params.since = since;

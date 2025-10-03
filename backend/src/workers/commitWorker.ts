@@ -1,24 +1,16 @@
 import { Worker } from 'bullmq';
-import { Redis } from 'ioredis';
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
 import githubService from '../services/github';
-
-export const WORKER_NAME = 'commit-worker';
+import { redisConnection, QUEUE_NAME } from '../config/redis';
 
 dotenv.config();
 
 const prisma = new PrismaClient();
 
-const connection = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  maxRetriesPerRequest: null,
-});
-
 // Background worker to fetch commits
 const worker = new Worker(
-  WORKER_NAME,
+  QUEUE_NAME,
   async (job) => {
     const { repositoryId, userId, repoFullName } = job.data;
 
@@ -74,7 +66,7 @@ const worker = new Worker(
       throw error;
     }
   },
-  { connection }
+  { connection: redisConnection }
 );
 
 worker.on('completed', (job) => {

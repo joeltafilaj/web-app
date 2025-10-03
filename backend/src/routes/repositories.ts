@@ -2,7 +2,7 @@ import { Router } from 'express';
 import passport from 'passport';
 import { PrismaClient } from '@prisma/client';
 import github from '../services/github';
-import queue from '../services/queue';
+import { commitsQueue } from '../config/redis';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -53,11 +53,21 @@ router.get(
         });
 
         // Queue background job to fetch commits
-        await queue.getCommits({
-          repositoryId: repository.id, 
-          userId: user.id, 
-          repoFullName: repo.full_name,
-        });
+        await commitsQueue.add(
+          'fetch-commits',
+          {
+            repositoryId: repository.id,
+            userId: user.id,
+            repoFullName: repo.full_name,
+          },
+          {
+            attempts: 3,
+            backoff: { type: 'exponential', delay: 2000 },
+            jobId: `${user.id}-${repository.id}`,
+            removeOnComplete: true,
+            removeOnFail: 10,
+          }
+        );
       }
 
       // Fetch repositories with commits from database
