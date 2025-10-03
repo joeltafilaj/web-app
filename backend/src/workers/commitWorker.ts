@@ -1,8 +1,8 @@
 import { Worker } from 'bullmq';
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
-import githubService from '../services/github';
 import { redisConnection, QUEUE_NAME } from '../config/redis';
+import { GitHubService } from '../services/github';
 
 dotenv.config();
 
@@ -32,7 +32,7 @@ const worker = new Worker(
 
       // Fetch commits from GitHub
       const since = latestCommit ? latestCommit.date.toISOString() : undefined;
-      const commits = await githubService.getRepositoryCommits({
+      const commits = await GitHubService.getRepositoryCommits({
         accessToken: user.accessToken,
         repoFullName,
         since,

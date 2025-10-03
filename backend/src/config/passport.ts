@@ -1,6 +1,6 @@
 import passport from 'passport';
 import { Strategy as GitHubStrategy } from 'passport-github2';
-import { Strategy as JwtStrategy, ExtractJwt, VerifyCallback } from 'passport-jwt';
+import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();

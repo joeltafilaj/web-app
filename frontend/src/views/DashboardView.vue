@@ -17,9 +17,9 @@ const router = useRouter()
 const selectedRepository = ref<Repository | null>(null)
 const isLoading = ref(false)
 
-const handleLogout = () => {
+const handleLogout = async () => {
   repositoryStore.clearRepositories()
-  authStore.logout()
+  await authStore.logout()
   router.push('/')
 }
 

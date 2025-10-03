@@ -14,7 +14,7 @@ export class GitHubService {
   /**
    * Fetch user's starred repositories from GitHub
    */
-  async getStarredRepositories(job: GetStarredRepositoriesJob) {
+  static async getStarredRepositories(job: GetStarredRepositoriesJob) {
     const { accessToken } = job;
     const response = await axios.get('https://api.github.com/user/starred', {
       headers: {
@@ -30,7 +30,7 @@ export class GitHubService {
   /**
    * Fetch commits for a specific repository from GitHub
    */
-  async getRepositoryCommits(job: GetRepositoryCommitsJob) {
+  static async getRepositoryCommits(job: GetRepositoryCommitsJob) {
     const { accessToken, repoFullName, since } = job;
     const params: any = { per_page: 100 };
     if (since) {
@@ -50,6 +50,22 @@ export class GitHubService {
 
     return response.data;
   }
-}
 
-export default new GitHubService();
+  /**
+   * Revoke access token from GitHub
+   */
+  static async revoke(accessToken: string): Promise<void> {
+    await axios.delete(
+      `https://api.github.com/applications/${process.env.GITHUB_CLIENT_ID}/token`,
+      {
+        auth: {
+          username: process.env.GITHUB_CLIENT_ID!,
+          password: process.env.GITHUB_CLIENT_SECRET!,
+        },
+        data: {
+          access_token: accessToken,
+        },
+      }
+    );
+  }
+}

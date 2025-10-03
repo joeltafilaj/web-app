@@ -92,8 +92,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const logout = () => {
-    clearToken()
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout')
+    } finally {
+      clearToken()
+    }
   }
 
   const clearError = () => {

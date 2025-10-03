@@ -18,8 +18,8 @@ const userStats = ref({
 const loading = ref(false)
 const error = ref<string | null>(null)
 
-const handleLogout = () => {
-  authStore.logout()
+const handleLogout = async () => {
+  await authStore.logout()
   router.push('/')
 }
 

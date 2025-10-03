@@ -1,16 +1,11 @@
 import { Router } from 'express';
 import passport from 'passport';
-import { PrismaClient } from '@prisma/client';
-import github from '../services/github';
+import { PrismaClient, User } from '@prisma/client';
 import { commitsQueue } from '../config/redis';
+import { GitHubService } from '../services/github';
 
 const router = Router();
 const prisma = new PrismaClient();
-
-interface User {
-  id: string;
-  accessToken: string;
-}
 
 // Get starred repositories
 router.get(
@@ -21,7 +16,7 @@ router.get(
       const user = req.user as User;
 
       // Fetch starred repos from GitHub
-      const starredRepos = await github.getStarredRepositories({
+      const starredRepos = await GitHubService.getStarredRepositories({
         accessToken: user.accessToken,
       });
 
