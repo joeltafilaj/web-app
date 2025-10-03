@@ -1,20 +1,18 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { Repository, useRepositoryStore } from '@/stores/repository'
+import { useRepositoryStore } from '@/stores/repository'
 import { useRouter } from 'vue-router'
 
 // Components
 import ErrorBanner from '@/components/ErrorBanner.vue'
 import UserProfile from '@/components/UserProfile.vue'
 import RepositoriesSection from '@/components/RepositoriesSection.vue'
-import ChartSection from '@/components/ChartSection.vue'
 
 const authStore = useAuthStore()
 const repositoryStore = useRepositoryStore()
 const router = useRouter()
 
-const selectedRepository = ref<Repository | null>(null)
 const isLoading = ref(false)
 
 const handleLogout = async () => {
@@ -92,15 +90,8 @@ onMounted(() => {
         <!-- Repositories Section -->
         <RepositoriesSection
           :repositories="repositoryStore.repositories"
-          v-model:selected="selectedRepository"
           :loading="isLoading"
           @refresh="refreshRepositories"
-        />
-
-        <!-- Charts Section -->
-        <ChartSection
-          :repositories="repositoryStore.repositories"
-          :selected-repository="selectedRepository"
         />
       </div>
     </main>

@@ -13,8 +13,6 @@ interface Props {
 
 defineProps<Props>()
 
-const selected = defineModel<Repository | null>('selected')
-
 interface Emits {
   (event: 'refresh'): void
 }
@@ -67,7 +65,6 @@ const emit = defineEmits<Emits>()
     <RepositoryList 
       v-else
       :repositories="repositories"
-      v-model:selected="selected"
     />
   </div>
 </template>

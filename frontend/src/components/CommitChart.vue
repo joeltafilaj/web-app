@@ -11,6 +11,8 @@ import {
   Tooltip,
   Legend,
   Filler,
+  CoreChartOptions,
+  ChartData,
 } from 'chart.js'
 
 // Types
@@ -31,7 +33,7 @@ const props = defineProps<{
   repository: Repository
 }>()
 
-const chartData = computed(() => {
+const chartData = computed<ChartData<'line'>>(() => {
   if (!props.repository.commits || props.repository.commits.length === 0) {
     return {
       labels: [],
@@ -61,7 +63,7 @@ const chartData = computed(() => {
     datasets: [
       {
         label: 'Commits',
-        data: sortedDates.map(date => commitsByDate.get(date)),
+        data: sortedDates.map(date => commitsByDate.get(date) as number),
         borderColor: 'rgb(37, 99, 235)',
         backgroundColor: 'rgba(37, 99, 235, 0.1)',
         fill: true,
@@ -115,7 +117,7 @@ const chartOptions = {
 <template>
   <div class="card">
     <div class="h-96">
-      <Line :data="chartData" :options="chartOptions" />
+      <Line :data="chartData" :options="chartOptions as unknown as CoreChartOptions<'line'>" />
     </div>
     
     <div class="mt-6 pt-6 border-t border-gray-200">
@@ -129,7 +131,7 @@ const chartOptions = {
         
         <div class="text-center p-4 bg-green-50 rounded-lg">
           <div class="text-3xl font-bold text-green-700">
-            {{ chartData.labels.length }}
+            {{ chartData.labels?.length }}
           </div>
           <div class="text-sm text-gray-600 mt-1">Active Days</div>
         </div>
@@ -137,7 +139,7 @@ const chartOptions = {
         <div class="text-center p-4 bg-purple-50 rounded-lg">
           <div class="text-3xl font-bold text-purple-700">
             {{ repository.commits.length > 0 ? 
-               (repository.commits.length / chartData.labels.length).toFixed(1) : 
+               (repository.commits.length / (chartData.labels?.length ?? 0)).toFixed(1) : 
                '0' }}
           </div>
           <div class="text-sm text-gray-600 mt-1">Avg. Commits/Day</div>

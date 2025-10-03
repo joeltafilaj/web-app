@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
+
 // Types
 import type { Repository } from '@/stores/repository'
 
@@ -8,7 +10,11 @@ interface Props {
 
 defineProps<Props>()
 
-const selected = defineModel<Repository | null>('selected')
+const router = useRouter()
+
+const viewRepository = (repo: Repository) => {
+  router.push(`/repository/${repo.id}`)
+}
 </script>
 
 <template>
@@ -16,11 +22,8 @@ const selected = defineModel<Repository | null>('selected')
     <div 
       v-for="repo in repositories.filter(repo => repo.starred)" 
       :key="repo.id"
-      @click="selected = repo"
+      @click="viewRepository(repo)"
       class="card cursor-pointer transition-all hover:shadow-md hover:border-primary-300"
-      :class="{
-        'border-primary-500 ring-2 ring-primary-200': selected?.id === repo.id
-      }"
     >
       <div class="space-y-3">
         <div class="flex items-start justify-between gap-4">

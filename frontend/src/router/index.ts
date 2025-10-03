@@ -26,10 +26,16 @@ const router = createRouter({
       component: () => import('@/views/ProfileView.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/repository/:id',
+      name: 'repository-detail',
+      component: () => import('@/views/RepositoryDetailView.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 })
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
   
   // Wait for initial auth check to complete

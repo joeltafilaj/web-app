@@ -1,0 +1,247 @@
+<script setup lang="ts">
+import { computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { useRepositoryStore } from '@/stores/repository'
+
+// Components
+import CommitChart from '@/components/CommitChart.vue'
+
+const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
+const repositoryStore = useRepositoryStore()
+
+const repository = computed(() => {
+  return repositoryStore.repositories.find(r => r.id === route.params.id)
+})
+
+const commitStats = computed(() => {
+  if (!repository.value?.commits?.length) {
+    return {
+      totalCommits: 0,
+      uniqueAuthors: 0,
+      dateRange: { start: null, end: null },
+      averageCommitsPerDay: 0,
+      mostActiveAuthor: null,
+    }
+  }
+
+  const commits = repository.value.commits
+  const authors = [...new Set(commits.map(c => c.author))]
+  const dates = commits.map(c => new Date(c.date)).sort((a, b) => a.getTime() - b.getTime())
+  
+  const startDate = dates[0]
+  const endDate = dates[dates.length - 1]
+  const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) || 1
+  
+  const authorCounts = authors.reduce((acc, author) => {
+    acc[author] = commits.filter(c => c.author === author).length
+    return acc
+  }, {} as Record<string, number>)
+  
+  const mostActiveAuthor = Object.entries(authorCounts)
+    .sort(([,a], [,b]) => b - a)[0]?.[0] || null
+  
+  return {
+    totalCommits: commits.length,
+    uniqueAuthors: authors.length,
+    dateRange: { start: startDate, end: endDate },
+    averageCommitsPerDay: Math.round((commits.length / daysDiff) * 10) / 10,
+    mostActiveAuthor,
+  }
+})
+
+const recentCommits = computed(() => {
+  if (!repository.value?.commits?.length) return []
+  
+  return repository.value.commits
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 10)
+})
+
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  })
+}
+
+const formatCommitMessage = (message: string) => {
+  if (message.length > 80) {
+    return message.substring(0, 80) + '...'
+  }
+  return message
+}
+
+const goBack = () => {
+  router.push('/dashboard')
+}
+
+const handleLogout = async () => {
+  await authStore.logout()
+  router.push('/')
+}
+
+onMounted(() => {
+  if (!authStore.isAuthenticated) {
+    router.push('/')
+    return
+  }
+  
+  if (!repository.value) {
+    router.push('/dashboard')
+  }
+})
+</script>
+
+<template>
+  <div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button @click="goBack" class="text-gray-600 hover:text-gray-900 transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <h1 class="text-xl font-bold text-gray-900">{{ repository?.name || 'Repository Details' }}</h1>
+          </div>
+          <div class="flex items-center gap-3">
+            <router-link to="/profile" class="flex btn btn-secondary">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Profile
+            </router-link>
+            <button @click="handleLogout" class="btn btn-secondary">
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div v-if="repository" class="space-y-8">
+        <!-- Repository Header -->
+        <div class="card">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ repository.name }}</h2>
+              <p class="text-gray-600 mb-4">{{ repository.fullName }}</p>
+              <p v-if="repository.description" class="text-gray-700 mb-4">
+                {{ repository.description }}
+              </p>
+              <div class="flex items-center gap-4 text-sm text-gray-500">
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
+                  </svg>
+                  {{ commitStats.totalCommits }} commits
+                </span>
+                <span v-if="commitStats.uniqueAuthors > 1" class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                  </svg>
+                  {{ commitStats.uniqueAuthors }} contributors
+                </span>
+                <span v-if="commitStats.dateRange.start" class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {{ formatDate(commitStats.dateRange.start) }} - {{ formatDate(commitStats.dateRange.end) }}
+                </span>
+              </div>
+            </div>
+            <a 
+              :href="repository.url" 
+              target="_blank"
+              class="btn btn-primary flex items-center gap-2"
+            >
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
+              </svg>
+              View on GitHub
+            </a>
+          </div>
+        </div>
+
+        <!-- Statistics Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="card text-center">
+            <div class="text-3xl font-bold text-primary-600">{{ commitStats.totalCommits }}</div>
+            <div class="text-gray-600 mt-1">Total Commits</div>
+          </div>
+          
+          <div class="card text-center">
+            <div class="text-3xl font-bold text-primary-600">{{ commitStats.uniqueAuthors }}</div>
+            <div class="text-gray-600 mt-1">Contributors</div>
+          </div>
+          
+          <div class="card text-center">
+            <div class="text-3xl font-bold text-primary-600">{{ commitStats.averageCommitsPerDay }}</div>
+            <div class="text-gray-600 mt-1">Commits/Day</div>
+          </div>
+        </div>
+
+        <!-- Commit Chart -->
+        <div class="card">
+          <h3 class="text-xl font-bold text-gray-900 mb-6">Commit Activity</h3>
+          <CommitChart :repository="repository" />
+        </div>
+        <!-- Recent Commits -->
+        <div v-if="recentCommits.length > 0" class="card">
+          <h3 class="text-xl font-bold text-gray-900 mb-6">Recent Commits</h3>
+          <div class="space-y-4">
+            <div v-for="commit in recentCommits" :key="commit.id" class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+              <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900 mb-1">
+                  {{ formatCommitMessage(commit.message) }}
+                </p>
+                <div class="flex items-center gap-4 text-xs text-gray-500">
+                  <span>{{ commit.author }}</span>
+                  <span>{{ formatDate(new Date(commit.date)) }}</span>
+                  <span class="font-mono text-gray-400">{{ commit.sha.substring(0, 7) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div v-if="!repository?.commits?.length" class="card text-center py-12">
+          <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">No Commits Available</h3>
+          <p class="text-gray-600">Commits are being fetched in the background. Refresh to check for updates.</p>
+          <button @click="goBack" class="mt-4 btn btn-primary">
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+
+      <!-- Repository Not Found -->
+      <div v-else class="card text-center py-12">
+        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Repository Not Found</h3>
+        <p class="text-gray-600">This repository might not be in your starred list.</p>
+        <button @click="goBack" class="mt-4 btn btn-primary">
+          Back to Dashboard
+        </button>
+      </div>
+    </main>
+  </div>
+</template>
