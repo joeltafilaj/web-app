@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import passport from 'passport';
 import { PrismaClient, User } from '@prisma/client';
-import { commitsQueue } from '../config/redis';
+import { commitsQueue } from '../workers';
 import { GitHubService } from '../services/github';
 
 const router = Router();

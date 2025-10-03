@@ -6,9 +6,8 @@ import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
 import repositoryRoutes from './routes/repositories';
 import './config/passport';
-import './workers/commitWorker'; // Start the background worker
+import './workers';
 
-// Load environment variables
 dotenv.config();
 
 const app = express();

@@ -17,26 +17,20 @@ router.get(
   '/github/callback',
   (request, result, next) => {
     passport.authenticate('github', { session: false }, (err: Error, user: User, info: unknown) => {
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-
-      // Handle authentication errors
       if (err) {
         return result.redirect(errorUrl(err.message));
       }
-
       if (!user) {
         return result.redirect(errorUrl(((info as Error)?.message ?? 'User not found.')));
       }
 
       try {
-        // Generate JWT token
         const token = jwt.sign(
           { sub: user.id, githubId: user.githubId },
           process.env.JWT_SECRET!,
           { expiresIn: '7d' }
         );
 
-        // Redirect to frontend with token
         result.redirect(successUrl(token));
       } catch (error) {
         result.redirect(errorUrl((error as Error).message));
