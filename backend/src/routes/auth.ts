@@ -7,6 +7,8 @@ import { GitHubService } from '../services/github';
 const router = Router();
 const prisma = new PrismaClient();
 
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
 // Start GitHub OAuth
 router.get('/github', passport.authenticate('github'));
 
@@ -19,11 +21,11 @@ router.get(
 
       // Handle authentication errors
       if (err) {
-        return result.redirect(`${frontendUrl}/auth/callback?error=${encodeURIComponent('Authentication failed with error: ' + err.message)}`);
+        return result.redirect(errorUrl(err.message));
       }
 
       if (!user) {
-        return result.redirect(`${frontendUrl}/auth/callback?error=${encodeURIComponent('Authentication failed: ' + ((info as Error)?.message ?? 'User not found.') + '.')}`);
+        return result.redirect(errorUrl(((info as Error)?.message ?? 'User not found.')));
       }
 
       try {
@@ -35,9 +37,9 @@ router.get(
         );
 
         // Redirect to frontend with token
-        result.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+        result.redirect(successUrl(token));
       } catch (error) {
-        result.redirect(`${frontendUrl}/auth/callback?error=${encodeURIComponent('Failed to generate authentication token.')}`);
+        result.redirect(errorUrl((error as Error).message));
       }
     })(request, result, next);
   }
@@ -48,7 +50,7 @@ router.get(
   '/status',
   passport.authenticate('jwt', { session: false }),
   (req, res) => {
-    const user = req.user as any;
+    const user = req.user as User;
     res.json({
       authenticated: true,
       user: {
@@ -98,6 +100,13 @@ router.post(
     }
   }
 );
+
+function errorUrl(error: string) { 
+  return `${FRONTEND_URL}/auth/callback?error=${encodeURIComponent('Authentication failed with error: ' + error)}`;
+}
+function successUrl(token: string) { 
+  return `${FRONTEND_URL}/auth/callback?token=${token}`;
+}
 
 export default router;
 
