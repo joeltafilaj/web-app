@@ -1,22 +1,9 @@
 <script setup lang="ts">
-import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
-import { watch } from 'vue'
-
-const authStore = useAuthStore()
-const router = useRouter()
-
 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 const handleLogin = () => {
   window.location.href = `${apiUrl}/api/auth/github`
 }
-
-watch(() => authStore.isAuthenticated, (isAuth) => {
-  if (isAuth) {
-    router.push('/dashboard')
-  }
-})
 </script>
 
 <template>
