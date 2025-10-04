@@ -13,7 +13,7 @@ defineProps<Props>()
 const router = useRouter()
 
 const viewRepository = (repo: Repository) => {
-  router.push(`/repository/${repo.id}`)
+  router.push(`/repository/${repo.fullName}`)
 }
 </script>
 

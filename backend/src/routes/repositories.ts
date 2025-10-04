@@ -82,19 +82,20 @@ router.get(
   }
 );
 
-// Get a single repository by ID
+// Get a single repository by full name (owner/repo)
 router.get(
-  '/:id',
+  '/:owner/:name',
   passport.authenticate('jwt', { session: false }),
   async (req, res) => {
     try {
       const user = req.user as User;
-      const { id } = req.params;
+      const { owner, name } = req.params;
+      const fullName = `${owner}/${name}`;
 
       // Fetch repository from database
       const repository = await prisma.repository.findFirst({
         where: {
-          id,
+          fullName,
           userId: user.id,
         },
         include: {

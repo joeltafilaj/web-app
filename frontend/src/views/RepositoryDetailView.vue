@@ -12,7 +12,6 @@ import { useAuthStore } from '@/stores/auth'
 // Components
 import CommitChart from '@/components/CommitChart.vue'
 import LanguageChart from '@/components/LanguageChart.vue'
-import { AxiosError } from 'axios'
 
 const route = useRoute()
 const router = useRouter()
@@ -77,10 +76,11 @@ const formatDate = (date: Date) => {
 }
 
 const fetchRepository = async () => {
-  const id = route.params.id as string
+  const owner = route.params.owner as string
+  const name = route.params.name as string
   
-  if (!id) {
-    error.value = 'Repository ID is missing'
+  if (!owner || !name) {
+    error.value = 'Repository name is missing'
     return
   }
 
@@ -88,7 +88,7 @@ const fetchRepository = async () => {
   error.value = null
 
   try {
-    const response = await api.get(`/repositories/${id}`)
+    const response = await api.get(`/repositories/${owner}/${name}`)
     repository.value = response.data
   } catch (err: any) {
     error.value = err?.response?.data.error || 'Failed to fetch repository'

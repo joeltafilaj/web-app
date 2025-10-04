@@ -27,7 +27,7 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/repository/:id',
+      path: '/repository/:owner/:name',
       name: 'repository-detail',
       component: () => import('@/views/RepositoryDetailView.vue'),
       meta: { requiresAuth: true },

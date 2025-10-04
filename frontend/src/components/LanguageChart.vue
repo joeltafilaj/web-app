@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeMount } from 'vue'
-import type { Repository } from '@/stores/repository'
+import type { Repository } from '@/types'
 
 interface Props {
   repository: Repository

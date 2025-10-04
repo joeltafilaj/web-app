@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Types
-import type { Repository } from '@/stores/repository'
+import type { Repository } from '@/types'
 
 // Components
 import RepositoryList from './RepositoryList.vue'

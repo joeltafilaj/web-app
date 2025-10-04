@@ -16,7 +16,7 @@ import {
 } from 'chart.js'
 
 // Types
-import type { Repository } from '@/stores/repository'
+import type { Repository } from '@/types'
 
 ChartJS.register(
   CategoryScale,
