@@ -82,4 +82,37 @@ router.get(
   }
 );
 
+// Get a single repository by ID
+router.get(
+  '/:id',
+  passport.authenticate('jwt', { session: false }),
+  async (req, res) => {
+    try {
+      const user = req.user as User;
+      const { id } = req.params;
+
+      // Fetch repository from database
+      const repository = await prisma.repository.findFirst({
+        where: {
+          id,
+          userId: user.id,
+        },
+        include: {
+          commits: {
+            orderBy: { date: 'desc' },
+          },
+        },
+      });
+
+      if (!repository) {
+        return res.status(404).json({ error: 'Repository not found' });
+      }
+
+      res.json(repository);
+    } catch (error) {
+      res.status(500).json({ error: `Failed to fetch repository: ${(error as Error)?.message}` });
+    }
+  }
+);
+
 export default router;

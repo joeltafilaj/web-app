@@ -1,8 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { useRepositoryStore } from '@/stores/repository'
 import { useRouter } from 'vue-router'
+
+// Types
+import type { Repository } from '@/types'
+
+// Utils
+import api from '@/services/api'
+import { useAuthStore } from '@/stores/auth'
 
 // Components
 import ErrorBanner from '@/components/ErrorBanner.vue'
@@ -10,30 +15,37 @@ import UserProfile from '@/components/UserProfile.vue'
 import RepositoriesSection from '@/components/RepositoriesSection.vue'
 
 const authStore = useAuthStore()
-const repositoryStore = useRepositoryStore()
 const router = useRouter()
 
+const repositories = ref<Repository[]>([])
 const isLoading = ref(false)
+const error = ref<string | null>(null)
 
 const handleLogout = async () => {
-  repositoryStore.clearRepositories()
   await authStore.logout()
   router.push('/')
 }
 
-const loadInitialData = async () => {
+const fetchRepositories = async () => {
   isLoading.value = true
+  error.value = null
+  
   try {
-    await repositoryStore.fetchStarredRepositories()
-  } catch (error) {
-    console.error('Error loading repositories:', error)
+    const response = await api.get('/repositories/starred')
+    repositories.value = response.data
+  } catch (err) {
+    error.value = (err as Error)?.message || 'Failed to fetch starred repositories'
   } finally {
     isLoading.value = false
   }
 }
 
 const refreshRepositories = async () => {
-  await loadInitialData()
+  await fetchRepositories()
+}
+
+const clearError = () => {
+  error.value = null
 }
 
 onMounted(() => {
@@ -42,7 +54,7 @@ onMounted(() => {
     return
   }
   
-  loadInitialData()
+  fetchRepositories()
 })
 </script>
 
@@ -78,10 +90,10 @@ onMounted(() => {
       <div class="space-y-8">
         <!-- Error Banners -->
         <ErrorBanner 
-          v-if="repositoryStore.error" 
+          v-if="error" 
           type="error"
-          :message="repositoryStore.error"
-          @dismiss="repositoryStore.clearError()"
+          :message="error"
+          @dismiss="clearError()"
         />
         
         <!-- User Profile -->
@@ -89,7 +101,7 @@ onMounted(() => {
 
         <!-- Repositories Section -->
         <RepositoriesSection
-          :repositories="repositoryStore.repositories"
+          :repositories="repositories"
           :loading="isLoading"
           @refresh="refreshRepositories"
         />

@@ -2,7 +2,7 @@
 import { useRouter } from 'vue-router'
 
 // Types
-import type { Repository } from '@/stores/repository'
+import type { Repository } from '@/types'
 
 interface Props {
   repositories: Repository[]

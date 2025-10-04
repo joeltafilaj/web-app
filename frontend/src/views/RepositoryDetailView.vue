@@ -1,21 +1,26 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+
+// Types
+import type { Repository } from '@/types'
+
+// Utils
+import api from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
-import { useRepositoryStore } from '@/stores/repository'
 
 // Components
 import CommitChart from '@/components/CommitChart.vue'
 import LanguageChart from '@/components/LanguageChart.vue'
+import { AxiosError } from 'axios'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-const repositoryStore = useRepositoryStore()
 
-const repository = computed(() => {
-  return repositoryStore.repositories.find(r => r.id === route.params.id)
-})
+const repository = ref<Repository | null>(null)
+const isLoading = ref(false)
+const error = ref<string | null>(null)
 
 const commitStats = computed(() => {
   if (!repository.value?.commits?.length) {
@@ -71,6 +76,31 @@ const formatDate = (date: Date) => {
   })
 }
 
+const fetchRepository = async () => {
+  const id = route.params.id as string
+  
+  if (!id) {
+    error.value = 'Repository ID is missing'
+    return
+  }
+
+  isLoading.value = true
+  error.value = null
+
+  try {
+    const response = await api.get(`/repositories/${id}`)
+    repository.value = response.data
+  } catch (err: any) {
+    error.value = err?.response?.data.error || 'Failed to fetch repository'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const refreshRepository = async () => {
+  await fetchRepository()
+}
+
 const goBack = () => {
   router.back()
 }
@@ -85,10 +115,7 @@ onMounted(() => {
     router.push('/')
     return
   }
-  
-  if (!repository.value) {
-    router.push('/dashboard')
-  }
+  fetchRepository()
 })
 </script>
 
@@ -107,6 +134,23 @@ onMounted(() => {
             <h1 class="text-xl font-bold text-gray-900">{{ repository?.name || 'Repository Details' }}</h1>
           </div>
           <div class="flex items-center gap-3">
+            <button 
+              @click="refreshRepository" 
+              :disabled="isLoading"
+              class="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              title="Refresh repository data from database"
+            >
+              <svg 
+                class="size-5" 
+                :class="{ 'animate-spin': isLoading }" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh
+            </button>
             <router-link to="/profile" class="flex btn btn-secondary">
               <svg class="size-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -123,7 +167,35 @@ onMounted(() => {
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div v-if="repository" class="space-y-8">
+      <!-- Loading State -->
+      <div v-if="isLoading && !repository" class="card">
+        <div class="flex items-center justify-center py-12">
+          <div class="text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+            <p class="mt-4 text-gray-600">Loading repository...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="error && !repository" class="card text-center py-12">
+        <svg class="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Error Loading Repository</h3>
+        <p class="text-gray-600 mb-4">{{ error }}</p>
+        <div class="flex items-center justify-center gap-3">
+          <button @click="refreshRepository" class="btn btn-primary">
+            Try Again
+          </button>
+          <button @click="goBack" class="btn btn-secondary">
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+
+      <!-- Repository Content -->
+      <div v-else-if="repository" class="space-y-8">
         <!-- Repository Header -->
         <div class="card">
           <div class="flex items-start justify-between mb-6">
@@ -229,8 +301,8 @@ onMounted(() => {
           </svg>
           <h3 class="text-lg font-medium text-gray-900 mb-2">No Commits Available</h3>
           <p class="text-gray-600">Commits are being fetched in the background. Refresh to check for updates.</p>
-          <button @click="goBack" class="mt-4 btn btn-primary">
-            Back to Dashboard
+          <button @click="refreshRepository" class="mt-4 btn btn-primary">
+            Refresh Repository
           </button>
         </div>
       </div>
